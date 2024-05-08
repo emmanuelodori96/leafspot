@@ -1,9 +1,10 @@
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
-import 'package:diagno/pages/my_home_page.dart';
 import 'package:diagno/pages/search_page.dart';
 import 'package:diagno/pages/settings_page.dart';
 import 'package:flutter/material.dart';
+
+import 'ai_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -26,7 +27,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Widget> widgetOption = [
-    MyHomePage(),
+    LeafSpotDetectionScreen(),
     SearchPage(),
     SettingPage()
   ];
