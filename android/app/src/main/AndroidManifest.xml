@@ -29,5 +29,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+<!--        <meta-data-->
+<!--            android:name="com.google.android.gms.safetynet.API_KEY"-->
+<!--            android:value="YOUR_SAFETYNET_RECAPTCHA_API_KEY" />-->
+
+<!--        <meta-data-->
+<!--            android:name="com.google.firebase.appcheck.api_key"-->
+<!--            android:value="YOUR_FIREBASE_APP_CHECK_API_KEY" />-->
     </application>
 </manifest>

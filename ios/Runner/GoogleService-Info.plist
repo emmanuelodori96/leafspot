@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>950617231479-4k06ftp7u3plbdq7jm2sdbk01ajs2dl8.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.950617231479-4k06ftp7u3plbdq7jm2sdbk01ajs2dl8</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAqmQFd8_8fJ3M-xlD4SogurkNyAJ3jvcU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>950617231479</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.gravitech.diagno</string>
+	<key>PROJECT_ID</key>
+	<string>emma-91fea</string>
+	<key>STORAGE_BUCKET</key>
+	<string>emma-91fea.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:950617231479:ios:c1ec10dfdefd6d88dbf672</string>
+</dict>
+</plist>

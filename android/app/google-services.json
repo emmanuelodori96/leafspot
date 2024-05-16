@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "950617231479",
+    "project_id": "emma-91fea",
+    "storage_bucket": "emma-91fea.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:950617231479:android:a3b731c2d0b814cedbf672",
+        "android_client_info": {
+          "package_name": "com.gravitech.diagno"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "950617231479-ooch983eog349dm7rum4cg0m94ui2m0r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNEJxOgzu9EjbstcVHihDB6VgyQ3rqXr8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "950617231479-08ogpuff1ti3qckcdp0rkka4jactb8cp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "950617231479-4k06ftp7u3plbdq7jm2sdbk01ajs2dl8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.gravitech.diagno"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
