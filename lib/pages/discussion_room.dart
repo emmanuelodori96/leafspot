@@ -83,7 +83,6 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     dataController = Get.put(DataController());
     myUid = FirebaseAuth.instance.currentUser!.uid;

@@ -107,7 +107,6 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     authController = Get.put(AuthController());
 
