@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vision/flutter_vision.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../controller/data_controller.dart';
 import '../util/circular_progress.dart';
 
 class LeafSpotDetectionScreen extends StatefulWidget {
@@ -61,66 +62,6 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
 
     }
     return Scaffold(
-      // appBar: AppBar(
-      //     title: Text(
-      //       'NARO AI VISION',
-      //
-      //     ),
-      //     actions: [
-      //       PopupMenuButton<String>(
-      //           onSelected: (String choice) {
-      //             // Handle the selected menu item here
-      //           },
-      //           itemBuilder: (BuildContext context) {
-      //             return [
-      //               PopupMenuItem<String>(
-      //                 value: 'Disease Identifier',
-      //                 child: Text('Disease Identifier',
-      //                   style: TextStyle(
-      //                       color: isDisease!? Colors.green: Colors.black
-      //                   ),
-      //                 ),
-      //                 onTap: (){
-      //                   setState(() {
-      //                     isDisease = true;
-      //                     imageFile = null;
-      //                     _confidence = 0.0;
-      //                     _disease = null;
-      //                     _recommendation =null;
-      //                     yoloResults = [];
-      //                   });
-      //                   loadYoloModel();
-      //                 },
-      //               ),
-      //               PopupMenuItem<String>(
-      //                 value: 'Variety Identifier',
-      //                 child: Text('Variety Identifier',
-      //                   style: TextStyle(
-      //                       color: isDisease!? Colors.black: Colors.green
-      //                   ),
-      //                 ),
-      //                 onTap: (){
-      //                   setState(() {
-      //                     isDisease = false;
-      //                     imageFile = null;
-      //                     _confidence = 0.0;
-      //                     _disease = null;
-      //                     _recommendation =null;
-      //                     yoloResults = [];
-      //                   });
-      //                   loadYoloModel();
-      //                 },
-      //               ),
-      //               const PopupMenuItem<String>(
-      //                 value: 'Yield Predictor',
-      //                 child: Text('Yield Predictor'),
-      //               ),
-      //
-      //             ];
-      //           }
-      //       )
-      //     ]
-      // ),
       body: Column(
         children: [
           Expanded(
@@ -225,10 +166,10 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                   TabBar(
                     isScrollable: true,
                     controller: _tabController,
-                    labelColor: Colors.blue,
+                    labelColor: Colors.green,
                     dividerColor: Colors.transparent,
                     tabAlignment: TabAlignment.start,
-                    unselectedLabelColor: Colors.black,
+                    unselectedLabelColor: DataController().isDarkMode.value? Colors.white:Colors.black,
                     onTap: (index){},
                     labelStyle: TextStyle(
                         fontSize: 20

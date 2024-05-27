@@ -1,377 +1,137 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../controller/data_controller.dart';
-import '../util/app_color.dart';
+import '../controller/profile_controller.dart';
 
+class ProfilePage extends StatefulWidget {
+  final String uid;
+  ProfilePage({required this.uid});
 
-class ProfileScreen extends StatefulWidget {
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-
-
-  TextEditingController emailController = TextEditingController();
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController locationController = TextEditingController();
-  final TextEditingController contactController = TextEditingController();
-  final TextEditingController farmSizeController = TextEditingController();
-  final TextEditingController cropTypeController = TextEditingController();
-
-
-
-
-  bool isNotEditable = true;
-  
-  
-  DataController? dataController;
-
-  int? followers = 0,following=0;
-  String image = '';
-
-  @override
-  initState(){
-    super.initState();
-    dataController = Get.put(DataController());
-
-
-
-    try{
-      nameController.text = dataController!.myDocument!.get('name');
-      emailController.text = dataController!.myDocument!.get('email');
-      locationController.text = dataController!.myDocument!.get('location');
-      contactController.text = dataController!.myDocument!.get('phone');
-      cropTypeController.text = dataController!.myDocument!.get('crop_type');
-      farmSizeController.text = dataController!.myDocument!.get('scale');
-    }catch(e){
-
-    }
-
-    try{
-      image = dataController!.myDocument!.get('image');
-    }catch(e){
-      image = '';
-    }
-
-    try{
-      locationController.text = dataController!.myDocument!.get('location');
-    }catch(e){
-      locationController.text = '';
-    }
-
-
-  }
+class _ProfilePageState extends State<ProfilePage> {
+  bool isEditable = false;
 
   @override
   Widget build(BuildContext context) {
-    var screenheight = MediaQuery.of(context).size.height;
-    var screenwidth = MediaQuery.of(context).size.width;
+    final ProfileController controller = Get.put(ProfileController(widget.uid));
+
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Stack(
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: Container(
-                  width: 100,
-                  margin: EdgeInsets.only(
-                      left: Get.width * 0.75, top: 20, right: 20),
-                  alignment: Alignment.topRight,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      InkWell(
-                        onTap: () {
+      appBar: AppBar(
+        title: Text('Farmer Profile'),
+        actions: [
+          controller.isCurrentUser
+              ? IconButton(
+                  icon: Icon(
+                      isEditable? Icons.save : Icons.edit),
+                  onPressed: () {
+                    if (isEditable) {
+                      // Call updateProfile with new data
+                      controller.updateProfile({
+                        'name': controller.farmerDoc.value!.data()!['name'],
+                        'phone': controller.farmerDoc.value!.data()!['phone'],
+                        'location': controller.farmerDoc.value!.data()!['location'],
+                        'scale': controller.farmerDoc.value!.data()!['scale'],
+                        'crop_type': controller.farmerDoc.value!.data()!['crop_type'],
 
-                        },
-                        // child: Image(
-                        //   image: AssetImage('assets/images/sms.png'),
-                        //   width: 28,
-                        //   height: 25,
-                        // ),
-                      ),
-                      Icon(Icons.menu),
-                    ],
-                  ),
-                ),
-              ),
-              Align(
-                child: Container(
-                  margin: EdgeInsets.symmetric(vertical: 90, horizontal: 20),
-                  width: Get.width,
-                  height: isNotEditable? 240: 310,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.15),
-                        spreadRadius: 2,
-                        blurRadius: 3,
-                        offset: Offset(0, 0), // changes position of shadow
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.center,
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: () {
-
-                      },
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        margin: EdgeInsets.only(top: 35),
-                        padding: EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: AppColors.blue,
-                          borderRadius: BorderRadius.circular(70),
-                          gradient: LinearGradient(
-                            colors: [
-                              Color(0xff7DDCFB),
-                              Color(0xffBC67F2),
-                              Color(0xffACF6AF),
-                              Color(0xffF95549),
-                            ],
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(70),
-                              ),
-                              child: CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: Colors.white,
-                                  backgroundImage: NetworkImage(
-                                   image,
-                                  )
-                              ),
-                              // child: Image.asset(
-                              //   'assets/profilepic.png',
-                              //   fit: BoxFit.contain,
-                              // ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 15,
-                    ),
-                    isNotEditable?Text(
-                      "${nameController.text}",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: AppColors.black,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ):
-                    Container(
-                      width: Get.width*0.6,
-                      child: Row(
-                        children: [
-                          Expanded(child: TextField(
-                            controller: nameController,
-                            textAlign: TextAlign.center,
-                            decoration: InputDecoration(
-                              hintText: 'Name',
-
-                            ),
-                          ),),
-
-                          SizedBox(
-                            width: 10,
-                          ),
-
-                          Expanded(child: TextField(
-                            controller: contactController,
-                            textAlign: TextAlign.center,
-                            decoration: InputDecoration(
-                              hintText: 'Phone',
-
-                            ),
-                          ),),
-                        ],
-                      ),
-                    ),
-                   isNotEditable? Text(
-                      "${locationController.text}",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xff918F8F),
-                      ),
-                    ):
-                   Container(
-                     width: Get.width*0.6,
-                     child: TextField(
-                       controller: locationController,
-                       textAlign: TextAlign.center,
-                       decoration: InputDecoration(
-                           hintText: 'Location',
-
-                       ),
-                     ),
-                   ),
-                    SizedBox(
-                      height: 15,
-                    ),
-                    isNotEditable?Container(
-                      width: 270,
-                      child: Text(
-                        '${emailController.text}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          letterSpacing: -0.3,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                    ): Container(
-                      width: Get.width*0.6,
-                      child: TextField(
-                        controller: emailController,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          hintText: 'Description',
-
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 15,
-                    ),
-
-                    Container(
-                      margin: EdgeInsets.symmetric(horizontal: 20),
-                      child: DefaultTabController(
-                        length: 2,
-                        initialIndex: 0,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: <Widget>[
-                            Container(
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: Colors.black,
-                                    width: 0.01,
-                                  ),
-                                ),
-                              ),
-                              child: TabBar(
-                                indicatorColor: Colors.black,
-                                labelPadding: EdgeInsets.symmetric(
-                                  horizontal: 20.0,
-                                  vertical: 10,
-                                ),
-                                unselectedLabelColor: Colors.black,
-                                tabs: [
-                                  Tab(
-                                    icon: Icon(Icons.post_add),
-                                    height: 20,
-                                  ),
-                                  Tab(
-                                    icon: Icon(Icons.group),
-                                    height: 20,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              height: screenheight * 0.46,
-                              //height of TabBarView
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  top: BorderSide(
-                                    color: Colors.white,
-                                    width: 0.5,
-                                  ),
-                                ),
-                              ),
-                              child: TabBarView(
-                                physics: NeverScrollableScrollPhysics(),
-                                children: <Widget>[
-                                  Text("No content"),
-
-                                  Container(
-                                    child: Center(
-                                      child: Text('Tab 2',
-                                          style: TextStyle(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.bold)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Align(
-                alignment: Alignment.topRight,
-                child: Container(
-                  margin: EdgeInsets.only(top: 105, right: 35),
-
-                  child: InkWell
-                    (
-                    onTap: (){
-
-
-                      if(isNotEditable ==false){
-                        FirebaseFirestore.instance.collection('farmers').doc(FirebaseAuth.instance.currentUser!.uid)
-                            .set({
-                          'name': nameController.text,
-                          'email': emailController.text,
-                          'location':locationController.text,
-                          'crop_type': cropTypeController.text,
-                          'scale': farmSizeController.text,
-                          'phone': contactController.text,
-                        },SetOptions(merge: true)).then((value) {
-                          Get.snackbar('Profile Updated', 'Profile has been updated successfully.',colorText: Colors.white,
-                              backgroundColor: Colors.blue);
-                        });
-                      }
-
-
-                      setState(() {
-                        isNotEditable = !isNotEditable;
+                      });
+                    } else {
+                      setState((){
+                        isEditable = true;
+                        controller.isEditing.value = true;
                       });
 
-
-
-
-
-                    },
-                    child: isNotEditable? Image(
-                      image: AssetImage('assets/images/edit.png'),
-                      width: screenwidth * 0.04,
-                    ): Icon(Icons.check,color: Colors.black,),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+                    }
+                  })
+              : SizedBox(),
+        ],
       ),
+      body: Obx(() {
+        if (controller.farmerDoc.value == null) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (!controller.farmerDoc.value!.exists) {
+          return Center(child: Text('Farmer not found'));
+        }
+
+        var data = controller.farmerDoc.value!.data()!;
+        return Padding(
+          padding: EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: CachedNetworkImageProvider(data['image']),
+                ),
+                SizedBox(height: 16),
+                _buildProfileField('Name', data['name'], controller.isEditing,
+                    (value) {
+                  data['name'] = value;
+                }),
+                _buildProfileField(
+                    'Email', data['email'], controller.isEditing, null,
+                    readOnly: true),
+                _buildProfileField('Phone', data['phone'], controller.isEditing,
+                    (value) {
+                  data['phone'] = value;
+                }),
+                _buildProfileField(
+                    'Location', data['location'], controller.isEditing,
+                    (value) {
+                  data['location'] = value;
+                }),
+                _buildProfileField('Scale', data['scale'], controller.isEditing,
+                    (value) {
+                  data['scale'] = value;
+                }),
+                _buildProfileField(
+                    'Gender', data['gender'], controller.isEditing, null,
+                    readOnly: true),
+                _buildProfileField(
+                    'Crop Type', data['crop_type'], controller.isEditing,
+                    (value) {
+                  data['crop_type'] = value;
+                }),
+              ],
+            ),
+          ),
+        );
+      }),
     );
+  }
+
+  Widget _buildProfileField(
+      String label, String value, RxBool isEditing, Function(String)? onChanged,
+      {bool readOnly = false}) {
+    return Obx(() {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+            isEditing.value && !readOnly
+                ? Expanded(
+                    child: TextFormField(
+                      initialValue: value,
+                      onChanged: onChanged,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  )
+                : Text(value),
+          ],
+        ),
+      );
+    });
   }
 }

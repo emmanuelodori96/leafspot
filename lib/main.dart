@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'controller/data_controller.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -15,21 +16,19 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await FirebaseAppCheck.instance.activate();
-  runApp(const MyApp());
+  runApp( MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key});
+  MyApp({Key? key});
+  final DataController dataController = Get.put(DataController());
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return Obx(() =>  GetMaterialApp(
       title: 'Diagnostic',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.greenAccent),
-        useMaterial3: true,
-      ),
+      theme: dataController.isDarkMode.value ? ThemeData.dark() : ThemeData.light(),
       home: FutureBuilder<User?>(
         future: FirebaseAuth.instance.authStateChanges().first,
         builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
@@ -46,7 +45,7 @@ class MyApp extends StatelessWidget {
           }
         },
       ),
-    );
+    ));
   }
 }
 

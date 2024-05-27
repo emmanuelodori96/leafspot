@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -14,6 +15,41 @@ class DataController extends GetxController {
   var filteredEvents = <DocumentSnapshot>[].obs;
 
   var isMessageSending = false.obs;
+
+  var isDarkMode = false.obs;
+  var newActivityNotifications = true.obs;
+  var emailNotifications = true.obs;
+  var smsNotifications = true.obs;
+
+  void toggleDarkMode(bool value) {
+    isDarkMode.value = value;
+    Color primaryColorLight = Colors.white;
+    Color primaryColorDark = Colors.black;
+    Color canvasColorLight = Colors.greenAccent;
+    Color canvasColorDark = Colors.blueGrey;
+    Get.changeTheme(
+        value ? ThemeData.dark().copyWith(
+          primaryColor: primaryColorDark,
+          canvasColor: canvasColorDark,
+        )
+            : ThemeData.light().copyWith(
+          primaryColor: primaryColorLight,
+          canvasColor: canvasColorLight,
+        )
+    );
+  }
+
+  void toggleNewActivityNotifications(bool value) {
+    newActivityNotifications.value = value;
+  }
+
+  void toggleEmailNotifications(bool value) {
+    emailNotifications.value = value;
+  }
+
+  void toggleSmsNotifications(bool value) {
+    smsNotifications.value = value;
+  }
 
   sendMessageToFirebase({
     Map<String, dynamic>? data,

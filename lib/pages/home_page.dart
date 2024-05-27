@@ -1,12 +1,13 @@
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
 import 'package:diagno/pages/profile_page.dart';
-import 'package:diagno/pages/search_page.dart';
 import 'package:diagno/pages/settings_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controller/data_controller.dart';
+import '../search/search_page.dart';
 import 'ai_screen.dart';
 import 'discussion_room.dart';
 
@@ -36,7 +37,7 @@ class _HomePageState extends State<HomePage> {
   List<Widget> widgetOption = [
     LeafSpotDetectionScreen(),
     SearchPage(),
-    SettingPage()
+    SettingsPage()
   ];
 
   @override
@@ -47,10 +48,12 @@ class _HomePageState extends State<HomePage> {
 
   }
 
-  void getImage()async{
-    imageUrl = dataController.myDocument?.get('image');
-    if (imageUrl != null && imageUrl!.isNotEmpty) {
-      imageProvider = NetworkImage(imageUrl!);
+  void getImage() async {
+    String? imageUrl = await dataController.myDocument?.get('image');
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      setState(() {
+        imageProvider = NetworkImage(imageUrl);
+      });
     }
   }
 
@@ -59,37 +62,47 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      appBar: AppBar(
-        leading: imageProvider !=null? InkWell(
-          radius: 10,
-          onTap: (){
-            Get.to(()=> ProfileScreen());
-
-          },
-          child: CircleAvatar(
-            backgroundImage: imageProvider,//
-
+      backgroundColor: Theme.of(context).primaryColor,
+      appBar: currentIndex != 1? AppBar(
+        leadingWidth: 50,
+        leading: imageProvider !=null? Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: InkWell(
+            onTap: (){
+              Get.to(()=> ProfilePage(uid: FirebaseAuth.instance.currentUser!.uid,));
+            },
+            child: CircleAvatar(
+              backgroundImage: imageProvider,
+            ),
           ),
         ): const Icon(Icons.person),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
+        title: currentIndex ==2? const Text('Settings'):Text(widget.title),
+      ): null,
       body: widgetOption[currentIndex],
       bottomNavigationBar: CurvedNavigationBar(
-        backgroundColor: Colors.white,
-        color: Colors.greenAccent,
-        items: const [
+        buttonBackgroundColor: Theme.of(context).dividerColor,
+        backgroundColor: DataController().isDarkMode.value? Colors.transparent: Colors.white,
+        color: DataController().isDarkMode.value? Color(0xFF495A4C):Color(0xFFB5DEB7),
+        items: [
           CurvedNavigationBarItem(
+            labelStyle: TextStyle(
+              color: DataController().isDarkMode.value? Colors.black: Colors.white
+            ),
             child: Icon(Icons.home_outlined),
             label: 'Home',
           ),
           CurvedNavigationBarItem(
+            labelStyle: TextStyle(
+                color: DataController().isDarkMode.value? Colors.black: Colors.white
+            ),
             child: Icon(Icons.search),
             label: 'Search',
           ),
           CurvedNavigationBarItem(
+            labelStyle: TextStyle(
+                color: DataController().isDarkMode.value? Colors.black: Colors.white
+            ),
             child: Icon(Icons.settings),
             label: 'Settings',
           ),
