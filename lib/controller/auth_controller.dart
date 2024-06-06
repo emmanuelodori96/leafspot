@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
+import 'package:diagno/pages/login_signup.dart';
 
 
 import 'package:path/path.dart' as Path;
@@ -51,6 +52,16 @@ class AuthController extends GetxController {
       print("Error in authentication $e");
       isLoading(false);
     });
+  }
+
+  Future<void> signOut() async {
+    try {
+      await auth.signOut();
+      // Navigate to the login screen after signing out
+      Get.offAllNamed('/login');
+    } catch (e) {
+      print("Error signing out: $e");
+    }
   }
 
   void forgetPassword(String email) {

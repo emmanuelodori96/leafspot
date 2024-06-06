@@ -10,7 +10,7 @@ class OnBoardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor,
+      //backgroundColor: Theme.of(context).primaryColor,
       body: SizedBox(
         width: double.infinity,
         child: Column(

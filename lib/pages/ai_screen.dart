@@ -1,12 +1,21 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vision/flutter_vision.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controller/data_controller.dart';
 import '../util/circular_progress.dart';
+import 'discussion_room.dart';
 
 class LeafSpotDetectionScreen extends StatefulWidget {
 
@@ -28,10 +37,18 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
   double _confidence = 0.0;
   String? _recommendation;
   TabController? _tabController;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  String detectedDisease = "leaf_spot"; // Assume this is detected by your model
+  String userRegion = "unknown"; // This will be updated based on GPS location
+  Map<String, dynamic>? recommendation;
+
 
   @override
   void initState() {
     super.initState();
+    _determinePosition();
     loadYoloModel().then((value) {
       setState(() {
         isLoaded = true;
@@ -39,7 +56,63 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
     });
     _tabController = TabController(length: 4, vsync: this);
 
+  }
 
+  // Example data to upload
+  final Map<String, dynamic> recommendationData = {
+    'region': 'Juba',
+    'disease': 'Leafspot Scale 1',
+    'scale': 1,
+    'description': 'Description of Leafspot at scale 1',
+    'causes': ['Cause 1', 'Cause 2'],
+    'prevention_and_cure': ['Prevention 1', 'Recommendation 1'],
+  };
+
+  Future<void> uploadRecommendation(Map<String, dynamic> data) async {
+    try {
+      await _firestore.collection('disease_recommendations').add(data);
+      print('Recommendation uploaded successfully!');
+    } catch (e) {
+      print('Failed to upload recommendation: $e');
+    }
+  }
+
+  void getRecommendation() async{
+    recommendation = await queryRecommendationsByRegion(userRegion);
+    saveRecommendationToPreferences(recommendation!);
+  }
+
+  Future<Map<String, dynamic>?> queryRecommendationsByRegion(String region) async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection('disease_recommendations')
+          .where('region', isEqualTo: region)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.first.data() as Map<String, dynamic>;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Failed to query recommendations: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveRecommendationToPreferences(Map<String, dynamic> recommendation) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('recommendation_${recommendation['region']}_${recommendation['disease']} Scale ${recommendation['scale']}', jsonEncode(recommendation));
+    print('Data has been successfully saved in the shared preferences');
+  }
+
+  Future<Map<String, dynamic>?> loadRecommendationFromPreferences(String region, String disease ) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? recommendationString = prefs.getString('recommendation_${region}_$disease');
+    if (recommendationString != null) {
+      return jsonDecode(recommendationString) as Map<String, dynamic>;
+    }
+    return null;
   }
 
 
@@ -49,12 +122,58 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
     vision.closeYoloModel();
   }
 
+
+
+  Future<void> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    _getAddressFromLatLng(position);
+    print(userRegion);
+  }
+
+  Future<void> _getAddressFromLatLng(Position position) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      Placemark place = placemarks[0];
+      setState(() {
+        userRegion = place.locality ?? "unknown";
+      });
+      getRecommendation();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
     if (!isLoaded) {
       loadYoloModel();
-      return Scaffold(
+      return const Scaffold(
         body: Center(
           child: Text("Model not loaded, waiting for it"),
         ),
@@ -85,10 +204,10 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                         fit: BoxFit.cover,
                       )
                           : null,
-                      color: imageFile == null? Color(0xffC4C4C4).withOpacity(0.2): Colors.transparent,
+                      color: imageFile == null? const Color(0xffC4C4C4).withOpacity(0.2): Colors.transparent,
                       borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(25), bottomRight: Radius.circular(25))),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.0),
                     child: Text(
                       "Your processed image with the detected disease shall appear hear",
                       style: TextStyle(
@@ -130,6 +249,7 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                     yoloResults = [];
                   });
                   imageDialog(context, true);
+                  getRecommendation();
                 }:null,
                 child: Image.asset(
                   'assets/uploadIcon.png',
@@ -171,7 +291,7 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                     tabAlignment: TabAlignment.start,
                     unselectedLabelColor: DataController().isDarkMode.value? Colors.white:Colors.black,
                     onTap: (index){},
-                    labelStyle: TextStyle(
+                    labelStyle: const TextStyle(
                         fontSize: 20
                     ),
                     labelPadding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -183,7 +303,7 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                         ),
                       ),
                     ),
-                    tabs: [
+                    tabs: const [
                       Text("Results"),
                       Text("Overview"),
                       Text("Causes"),
@@ -250,13 +370,13 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                                     ),
                                   ),
                                   Text(_disease!,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         fontSize: 20,
                                         fontFamily: 'Time New Roman'),
                                   ),
                                 ],
                               ),
-                             Text(
+                             const Text(
                                 "Groundnut leaf spot is a common fungal disease affecting groundnut (peanut) plants, caused by various pathogens such as Cercospora arachidicola and Cercosporidium personatum. It typically manifests as small, dark spots on the leaves, which can merge and cause extensive damage if not managed properly",
                                 style: TextStyle(
                                     fontSize: 20,
@@ -266,15 +386,26 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                             ],
                           ),
                         ),
-                        Center(
-                          child: Text("Disease overview shall appear here"),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(recommendation!['description']),
                         ),
-                        Center(
-                          child: Text("Disease causes shall appear here"),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: ListView(
+                            children: (recommendation!['causes'] as List<dynamic>)
+                                .map((cause) => ListTile(title: Text(cause)))
+                                .toList(),
+                          ),
                         ),
-                        Center(
-                          child:Text("Disease prevention and cure shall appear here"),
-                        )
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: ListView(
+                            children: (recommendation!['prevention_and_cure'] as List<dynamic>)
+                                .map((item) => ListTile(title: Text(item)))
+                                .toList(),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -282,11 +413,11 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
 
                 ],
               )
-                  :const Padding(
-                padding: EdgeInsets.all(8.0),
+                  :Padding(
+                padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  'After selecting an image processing it your results will appear here',
-                  style: TextStyle(
+                  'After selecting an image processing it your results will appear here with recommendation based on your location $userRegion',
+                  style: const TextStyle(
                       fontSize: 20, fontFamily: 'Time New Roman'),
                   textAlign: TextAlign.center,
                 ),
@@ -295,14 +426,13 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: ElevatedButton(
-        onPressed: _disease != null&& _confidence >0? () {
-          // Display bottom sheet with recommendations
-          _showRecommendations(context);
-        }: null,
-        child:
-        _disease != null && _confidence >0?const Text('View Recommendations'): _disease != null && _confidence <0 ?const Text('No confidence in results'):const Text('No results yet'),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: (){
+          Get.to(()=> DiscussionRoom());
+        },
+        tooltip: 'Message',
+        child: const Icon(Icons.message_rounded),
       ),
     );
 
@@ -346,7 +476,7 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
     imageWidth = image.width;
 
     try {
-      final result = await Future.delayed(Duration(seconds: 5), () {
+      final result = await Future.delayed(const Duration(seconds: 5), () {
         print("Model has started running");
         return vision.yoloOnImage(
           bytesList: byte,
@@ -374,24 +504,24 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('No results obtained'),
-            content: Text('Either your image is unclear or it is not groundnut leaf'),
+            title: const Text('No results obtained'),
+            content: const Text('Either your image is unclear or it is not groundnut leaf'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text('OK'),
+                child: const Text('OK'),
               ),
             ],
           ),
         ):showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Delay'),
-            content: Text('The model is taking too much time in processing'),
+            title: const Text('Delay'),
+            content: const Text('The model is taking too much time in processing'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text('OK'),
+                child: const Text('OK'),
               ),
             ],
           ),
@@ -405,12 +535,12 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text('An error occurred while processing the image.'),
+          title: const Text('Error'),
+          content: const Text('An error occurred while processing the image.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         ),
@@ -481,8 +611,17 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
     // Assume results are in the format [disease, confidence]
     _disease = results[0]['tag'];
     _confidence = results[0]['box'][4];
-    // Get recommendation based on the detected disease
-    _recommendation = _getRecommendationForDisease(_disease);
+    final connectivityResult = (Connectivity().checkConnectivity());
+    if (connectivityResult != ConnectivityResult.none) {
+      getRecommendation();
+    }
+    else{
+      loadRecommendationFromPreferences(userRegion, _disease!);
+
+    }
+
+    loadRecommendationFromPreferences(userRegion, _disease!);
+
   }
 
   String? _getRecommendationForDisease(String? disease) {
@@ -517,10 +656,10 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
             children: [
               Text(
                 'Recommendations on $_disease:',
-                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 10.0),
-              Text(
+              const SizedBox(height: 10.0),
+              const Text(
                 '1. Practice good field sanitation.\n'
                     '2. Use disease-resistant crop varieties.\n'
                     '3. Implement integrated pest management strategies.\n'

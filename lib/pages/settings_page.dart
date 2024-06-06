@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controller/auth_controller.dart';
 import '../controller/data_controller.dart';
 import 'profile_page.dart';
 
@@ -12,6 +13,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   late DataController dataController;
+  final AuthController _authController = Get.put(AuthController());
 
   @override
   void initState() {
@@ -95,7 +97,7 @@ class _SettingsPageState extends State<SettingsPage> {
             title: Text('Logout'),
             leading: Icon(Icons.logout),
             onTap: () {
-              // Handle logout
+              _authController.signOut();
             },
           ),
         ],

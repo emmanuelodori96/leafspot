@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:grouped_list/grouped_list.dart';
 // import 'package:google_fonts/google_fonts.dart';
@@ -16,7 +18,6 @@ import 'package:flutter/foundation.dart' as foundation;
 import '../../controller/data_controller.dart';
 import '../util/app_color.dart';
 import '../util/my_widgets.dart';
-
 
 class DiscussionRoom extends StatefulWidget {
   DiscussionRoom(
@@ -34,6 +35,7 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
   bool isEmojiPickerOpen = false;
   String myUid = '';
   String myName = '';
+  String myImage = '';
   var screenheight;
 
   var screenwidth;
@@ -81,12 +83,34 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
     }
   }
 
+  Future<String> fetchMyImage() async {
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+
+    try {
+      DocumentSnapshot userSnapshot =
+          await FirebaseFirestore.instance.collection('farmers').doc(uid).get();
+
+      if (userSnapshot.exists) {
+        String image = userSnapshot.get('image') ?? '';
+
+        myImage = '$image';
+        return myImage;
+      } else {
+        return '';
+      }
+    } catch (e) {
+      print('Error fetching profile picture: $e');
+      return '';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     dataController = Get.put(DataController());
     myUid = FirebaseAuth.instance.currentUser!.uid;
     fetchMyName();
+    fetchMyImage();
   }
 
   @override
@@ -95,11 +119,11 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
     screenwidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor,
+      //backgroundColor: Theme.of(context).primaryColor,
       appBar: AppBar(
         // centerTitle: true,
         elevation: 0,
-        backgroundColor: Theme.of(context).primaryColor,
+        //backgroundColor: Theme.of(context).primaryColor,
         title: myText(
           text: 'Discussion Room',
           style: TextStyle(
@@ -306,7 +330,8 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
                                 'message': message,
                                 'timeStamp': Timestamp.now(),
                                 'uid': myUid,
-                                'userName': myName
+                                'userName': myName,
+                                'image': myImage
                               };
 
                               if (replyText.length > 0) {
@@ -424,9 +449,13 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
 
   textMessageIReceived(DocumentSnapshot doc) {
     String message = '';
+    String userName = '';
+    String userImage = '';
     Timestamp time = doc.get('timeStamp');
     try {
       message = doc.get('message');
+      userName = doc.get('userName');
+      userImage = doc.get('image');
     } catch (e) {
       message = '';
     }
@@ -447,22 +476,22 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
           children: [
             Row(
               children: [
-                const Padding(
-                    padding: EdgeInsets.only(left: 12),
-                    child:
-                        // widget.image!.isEmpty
-                        //     ?
-                        CircleAvatar(
-                      backgroundColor: Colors.blue,
-                      child: Icon(
-                        Icons.person,
-                        color: Colors.white,
-                      ),
-                    )
-                    //     : CircleAvatar(
-                    //   backgroundImage: NetworkImage(widget.image!),
-                    // ),
-                    ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: userImage.isEmpty
+                      ? const CircleAvatar(
+                          backgroundColor: Colors.blue,
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.white,
+                          ),
+                        )
+                      : CircleAvatar(
+                          backgroundImage:
+                              CachedNetworkImageProvider(userImage),
+                          radius: 30,
+                        ),
+                ),
                 Expanded(
                   child: Align(
                     alignment: Alignment.topLeft,
@@ -482,6 +511,17 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
                       child: Stack(
                         //mainAxisAlignment: MainAxisAlignment.start,
                         children: [
+                          Positioned(
+                            top: 0,
+                            left: 5,
+                            child: Text(
+                              userName,
+                              style: TextStyle(
+                                  color: AppColors.black,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500),
+                            ),
+                          ),
                           Padding(
                             padding: const EdgeInsets.all(14),
                             child: Text(
@@ -603,7 +643,7 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
     return Align(
       alignment: Alignment.topRight,
       child: Container(
-        width: MediaQuery.of(context).size.width*0.6,
+        width: MediaQuery.of(context).size.width * 0.6,
         margin: const EdgeInsets.only(right: 20, top: 10),
         padding: const EdgeInsets.all(10),
         decoration: const BoxDecoration(
@@ -617,7 +657,9 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Image(image: NetworkImage(message),),
+            Image(
+              image: NetworkImage(message),
+            ),
             // const SizedBox(
             //   height: 5,
             // ),
@@ -653,10 +695,12 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
     String message = '';
     Timestamp time = Timestamp.now();
     String userName = '';
+    String userImage = '';
     try {
       message = doc.get('message');
       time = doc.get('timeStamp');
       userName = doc.get('userName');
+      userImage = doc.get('image');
     } catch (e) {
       message = '';
     }
@@ -664,84 +708,84 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
     String amPm = hour < 12 ? 'AM' : 'PM';
     return Container(
       margin: const EdgeInsets.only(top: 10),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              const Align(
+              Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
-                    padding: EdgeInsets.only(left: 12),
-                    child: CircleAvatar(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: userImage.isEmpty
+                        ? const CircleAvatar(
                       backgroundColor: Colors.blue,
                       child: Icon(
                         Icons.person,
                         color: Colors.white,
                       ),
-                    )),
+                    )
+                        : CircleAvatar(
+                      backgroundImage:
+                      CachedNetworkImageProvider(userImage),
+                      radius: 30,
+                    ),
+                ),
               ),
               Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
-                        bottomRight: Radius.circular(18),
-                        bottomLeft: Radius.circular(18),
-                        topRight: Radius.circular(18),
-                        topLeft: Radius.zero,
-                      ),
-                      color: AppColors.greychat,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    bottomRight: Radius.circular(18),
+                    bottomLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
+                    topLeft: Radius.zero,
+                  ),
+                  color: AppColors.greychat,
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      userName,
+                      style: TextStyle(
+                          color: AppColors.grey,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500),
                     ),
-                    child: Column(
+                    Container(
+                      margin: const EdgeInsets.only(left: 20),
+                      width: screenwidth * 0.5,
+                      height: screenheight * 0.2,
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black),
+                          borderRadius: const BorderRadius.only(
+                              topRight: Radius.circular(18),
+                              topLeft: Radius.circular(18),
+                              bottomRight: Radius.circular(18),
+                              bottomLeft: Radius.circular(18)),
+                          image: DecorationImage(
+                              image: NetworkImage(message), fit: BoxFit.fill)),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Text(
-                          userName,
+                          '${hourOf12(hour)}:${time.toDate().minute} $amPm',
                           style: TextStyle(
-                              color: AppColors.grey,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500),
-                        ),
-
-                        Container(
-                          margin: const EdgeInsets.only(left: 20),
-                          width: screenwidth * 0.5,
-                          height: screenheight * 0.2,
-                          decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
-                              borderRadius: const BorderRadius.only(
-                                  topRight: Radius.circular(18),
-                                  topLeft: Radius.circular(18),
-                                  bottomRight: Radius.circular(18),
-                                bottomLeft: Radius.circular(18)
-                              ),
-                              image: DecorationImage(
-                                  image: NetworkImage(message), fit: BoxFit.fill)),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(
-                                '${hourOf12(hour)}:${time.toDate().minute} $amPm',
-                                style: TextStyle(
-                                  color: AppColors.grey,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
-                                ),
-                              textAlign: TextAlign.start,
-                              ),
-                
-                          ],
+                            color: AppColors.grey,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.start,
                         ),
                       ],
                     ),
-                  ),
-
-
+                  ],
+                ),
+              ),
             ],
           ),
-
         ],
       ),
     );
@@ -750,10 +794,12 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
   sentReplyTextToText(DocumentSnapshot doc) {
     String message = '';
     String reply = '';
+    String userName = '';
     Timestamp time = Timestamp.now();
     try {
       message = doc.get('message');
       time = doc.get('timeStamp');
+      userName = doc.get('userName');
     } catch (e) {
       message = '';
     }
@@ -775,7 +821,7 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
               Padding(
                 padding: const EdgeInsets.only(left: 66, top: 5),
                 child: Text(
-                  "You replied to Unknown",
+                  "You replied to $userName",
                   style: TextStyle(
                     color: AppColors.grey,
                     fontWeight: FontWeight.w500,
@@ -883,11 +929,13 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
     String message = '';
     String reply = '';
     String userName = '';
+    String userImage = '';
     Timestamp time = Timestamp.now();
     try {
       message = doc.get('message');
       time = doc.get('timeStamp');
       userName = doc.get('userName');
+      userImage = doc.get('image');
     } catch (e) {
       message = '';
     }
@@ -961,15 +1009,22 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
           ),
           Row(
             children: [
-              const Padding(
-                  padding: EdgeInsets.only(left: 12),
-                  child: CircleAvatar(
+              Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: userImage.isEmpty
+                      ? const CircleAvatar(
                     backgroundColor: Colors.blue,
                     child: Icon(
                       Icons.person,
                       color: Colors.white,
                     ),
-                  )),
+                  )
+                      : CircleAvatar(
+                    backgroundImage:
+                    CachedNetworkImageProvider(userImage),
+                    radius: 30,
+                  ),
+              ),
               Container(
                 margin: const EdgeInsets.only(left: 17),
                 width: screenwidth * 0.43,
@@ -1052,7 +1107,8 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
                       'type': 'iSentImage',
                       'message': imageUrl,
                       'timeStamp': Timestamp.now(),
-                      'uid': myUid
+                      'uid': myUid,
+                      'image': myImage,
                     };
 
                     dataController!.sendMessageToFirebase(
@@ -1083,18 +1139,15 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
                       'type': 'iSentImage',
                       'message': imageUrl,
                       'timeStamp': Timestamp.now(),
-                      'uid': myUid
+                      'uid': myUid,
+                      'image': myImage,
                     };
 
                     dataController!.sendMessageToFirebase(
                         data: data, lastMessage: 'Image');
                   }
                 },
-                child: Image.asset(
-                  'assets/images/gallary.png',
-                  width: 25,
-                  height: 25,
-                ),
+                child: const Icon(Icons.photo)
               ),
             ],
           ),

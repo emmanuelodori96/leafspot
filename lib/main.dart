@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:diagno/pages/home_page.dart';
 import 'package:diagno/pages/onboarding_page.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -8,6 +10,7 @@ import 'package:get/get.dart';
 
 import 'controller/data_controller.dart';
 import 'firebase_options.dart';
+import 'pages/login_signup.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,12 +24,13 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   MyApp({Key? key});
+
   final DataController dataController = Get.put(DataController());
 
   @override
   Widget build(BuildContext context) {
     return Obx(() =>  GetMaterialApp(
-      title: 'Diagnostic',
+      title: 'AgriGuard',
       debugShowCheckedModeBanner: false,
       theme: dataController.isDarkMode.value ? ThemeData.dark() : ThemeData.light(),
       home: FutureBuilder<User?>(
@@ -37,7 +41,7 @@ class MyApp extends StatelessWidget {
           } else {
             if (snapshot.hasData && snapshot.data != null) {
               // User is logged in, navigate to home page
-              return const HomePage(title: 'Diagno vision');
+              return const HomePage(title: 'AgriGuard vision');
             } else {
               // User is not logged in, navigate to welcome screen
               return const OnBoardingScreen();
@@ -45,7 +49,12 @@ class MyApp extends StatelessWidget {
           }
         },
       ),
-    ));
+      getPages: [
+        GetPage(name: '/login', page: () => LoginView()),
+        GetPage(name: '/home', page: () => const HomePage(title: 'AgriGuard vision',)),
+      ],
+    )
+    );
   }
 }
 
