@@ -64,6 +64,25 @@ class DataController extends GetxController {
     isMessageSending(false);
   }
 
+  sendOneOnOneMessageToFirebase({
+    Map<String,dynamic>? data,
+    String? lastMessage,
+    String? grouid
+  })async{
+
+    isMessageSending(true);
+
+    await FirebaseFirestore.instance.collection('inquiry').doc(grouid).collection('inquiryRoom').add(data!);
+    await FirebaseFirestore.instance.collection('inquiry').doc(grouid).set({
+      'lastMessage': lastMessage,
+      'groupId': grouid,
+      'group': grouid!.split('-'),
+    },SetOptions(merge: true));
+
+    isMessageSending(false);
+
+  }
+
   createNotification() {
     FirebaseFirestore.instance.collection('notifications').add({
       'message': "Send you a message.",

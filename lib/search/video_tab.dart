@@ -116,7 +116,6 @@ class _VideoListItemState extends State<VideoListItem> {
             title:  VideoProgressIndicator(_controller, allowScrubbing: true),
           ),
 
-
         ],
       );
 

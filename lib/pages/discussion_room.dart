@@ -4,27 +4,20 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:grouped_list/grouped_list.dart';
 // import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart' as foundation;
 
 import '../../controller/data_controller.dart';
 import '../util/app_color.dart';
 import '../util/my_widgets.dart';
 
 class DiscussionRoom extends StatefulWidget {
-  DiscussionRoom(
-      //{this.image, this.name, this.groupId, this.fcmToken,this.uid}
-      );
+  const DiscussionRoom({super.key});
 
-  //String? image, name, groupId, fcmToken,uid;
 
   @override
   _DiscussionRoomState createState() => _DiscussionRoomState();
@@ -72,7 +65,7 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
       if (userSnapshot.exists) {
         String name = userSnapshot.get('name') ?? '';
 
-        myName = '$name';
+        myName = name;
         return myName;
       } else {
         return '';
@@ -93,7 +86,7 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
       if (userSnapshot.exists) {
         String image = userSnapshot.get('image') ?? '';
 
-        myImage = '$image';
+        myImage = image;
         return myImage;
       } else {
         return '';
@@ -167,6 +160,7 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
                       return GroupedListView<dynamic, String>(
                         elements: groupedMessages.entries.toList(),
                         groupBy: (element) => element.key,
+                        reverse: true,
                         groupSeparatorBuilder: (String groupByValue) => Text(
                           groupByValue,
                           textAlign: TextAlign.center,
@@ -234,7 +228,7 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
                         itemBuilder: (ctx, element) =>
                             buildMessageWidget(element.value),
                         //itemCount: groupedMessages.length,
-                        order: GroupedListOrder.DESC,
+                        order: GroupedListOrder.ASC,
                       );
                     },
                     stream: FirebaseFirestore.instance
@@ -334,7 +328,7 @@ class _DiscussionRoomState extends State<DiscussionRoom> {
                                 'image': myImage
                               };
 
-                              if (replyText.length > 0) {
+                              if (replyText.isNotEmpty) {
                                 data['reply'] = replyText;
                                 data['type'] = 'iSentReply';
                                 replyText = '';

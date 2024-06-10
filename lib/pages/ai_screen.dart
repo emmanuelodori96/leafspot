@@ -35,14 +35,12 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
   bool _processing = false;
   String? _disease;
   double _confidence = 0.0;
-  String? _recommendation;
   TabController? _tabController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final Connectivity _connectivity = Connectivity();
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
-  String detectedDisease = "leaf_spot"; // Assume this is detected by your model
-  String userRegion = "unknown"; // This will be updated based on GPS location
-  Map<String, dynamic>? recommendation;
+  String detectedDiseaseScale = "Leafspot Scale 1"; // this will be updated when the model finished running
+  String userRegion = "Kampala"; // This will be updated based on GPS location
+  late Map<String, dynamic> recommendation;
 
 
   @override
@@ -54,18 +52,87 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
         isLoaded = true;
       });
     });
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
 
   }
 
   // Example data to upload
   final Map<String, dynamic> recommendationData = {
-    'region': 'Juba',
-    'disease': 'Leafspot Scale 1',
-    'scale': 1,
-    'description': 'Description of Leafspot at scale 1',
-    'causes': ['Cause 1', 'Cause 2'],
-    'prevention_and_cure': ['Prevention 1', 'Recommendation 1'],
+    'region': 'Unknown',
+    'disease': 'Early Leafspot',
+    'scale': ['Leafspot Scale 1', 'Leafspot Scale 2', 'Leafspot Scale 3'],
+    'description': 'Early leaf spot is a common and destructive foliar disease of groundnuts (peanuts) caused by the fungal pathogen Cercospora arachidicola. It is characterized by the appearance of small, brown to black spots on the leaves, which can coalesce to form larger lesions, ultimately leading to defoliation and significant yield losses. The disease is prevalent in regions with warm, humid climates and can affect groundnut crops at various stages of growth, reducing both the quantity and quality of the harvest.',
+    'causes': [
+      'Temperature: Warm temperatures between 25-30°C (77-86°F) are ideal for the growth and spread of the fungus.',
+      'Humidity: High humidity and frequent rainfall create a conducive environment for fungal spores to germinate and infect the plant tissues.',
+      'Leaf Wetness: Prolonged periods of leaf wetness due to dew, rain, or irrigation facilitate spore germination and penetration into the leaf surface.',
+      'Varietal Susceptibility: Some groundnut varieties are more susceptible to early leaf spot than others. Susceptible varieties lack genetic resistance to the pathogen.',
+      'Crop Density: Dense planting can create a microclimate that favors the disease by reducing air circulation and increasing humidity within the canopy.',
+      'Previous Crop Residue: Infected plant debris left in the field from previous crops can harbor the fungus and serve as a source of inoculum for new infections.',
+    ],
+    'prevention_and_cure': [
+      'Crop Rotation: Rotate groundnuts with non-host crops such as cereals or legumes to reduce the buildup of the pathogen in the soil.',
+      'Resistant Varieties: Plant groundnut varieties that are resistant or tolerant to early leaf spot to minimize disease incidence.',
+      'Planting Density: Avoid overly dense planting to improve air circulation and reduce humidity levels within the crop canopy.',
+      'Field Sanitation: Remove and destroy infected plant debris after harvest to reduce the amount of inoculum available for the next planting season.',
+      'Antagonistic Microorganisms: Utilize beneficial microorganisms such as Trichoderma spp. and Bacillus spp. that can suppress the growth of Cercospora arachidicola through competition or antagonism.',
+      'Fungicides: Apply fungicides as a preventive measure or at the onset of the disease. Commonly used fungicides include chlorothalonil, tebuconazole, and mancozeb. Fungicide applications should follow recommended schedules and dosage to be effective and minimize the risk of resistance development.',
+    ],
+    'cure': [
+      'Apply fungicides at regular intervals, starting at the first sign of disease symptoms. Follow label recommendations for dosage and application frequency.',
+      'Combine cultural practices, resistant varieties, and fungicide applications in an integrated approach to manage the disease effectively.',
+      'Regularly monitor fields for early signs of the disease. Early detection allows for timely intervention and reduces the spread of the disease.',
+      'Avoid overhead irrigation during periods of high humidity and leaf wetness. Opt for drip or furrow irrigation to minimize leaf wetness.',
+    ],
+    'symptoms': [
+      'Appearance: Small, circular to irregular spots that are brown to black in color.',
+      'Size: Spots are typically 1-10 mm in diameter.',
+      'Halos: Spots are often surrounded by yellow halos, giving a "fried egg" appearance on the leaves',
+      'Location: Spots primarily appear on the upper surface of older leaves but can also be found on stems, petioles, and pegs in severe cases.',
+      'Early Season: The disease typically appears earlier in the growing season compared to late leaf spot.',
+      'Coalescence: As the disease progresses, individual spots can merge to form larger, irregularly shaped lesions.',
+      'Leaf Tissue Damage: Infected leaf tissue eventually turns necrotic, leading to leaf browning and death.',
+      'Premature Leaf Drop: Severe infections can cause premature defoliation, weakening the plant and reducing photosynthetic capacity, ultimately impacting yield.',
+      'Stem Lesions: In advanced stages, lesions can spread to stems, appearing as elongated, dark brown to black streaks.',
+      'Yield Loss: Early and extensive defoliation can significantly reduce pod formation and kernel development, leading to substantial yield losses.',
+    ],
+  };
+  final Map<String, dynamic> recommendationDataLate = {
+    'region': 'Unknown',
+    'disease': 'Late Leafspot',
+    'scale': ['Leafspot Scale 4', 'Leafspot Scale 5', 'Leafspot Scale 6'],
+    'description': 'Late leaf spot is a severe foliar disease of groundnuts (peanuts), caused by the fungal pathogen Phaeoisariopsis personata. It typically manifests later in the growing season compared to early leaf spot. The disease is characterized by the appearance of dark brown to black spots on the leaves, which can merge, leading to significant defoliation and yield loss. Late leaf spot is particularly problematic in tropical and subtropical regions where warm and humid conditions prevail.',
+    'causes': [
+      'Temperature: The fungus thrives in warm temperatures between 25-30°C (77-86°F).',
+      'Humidity: High humidity and frequent rainfall are conducive to the disease, promoting spore germination and infection.',
+      'Leaf Wetness: Extended periods of leaf wetness due to dew, rain, or irrigation facilitate fungal penetration into leaf tissues.',
+      'Varietal Susceptibility: Certain groundnut varieties are more susceptible to late leaf spot due to genetic factors.',
+      'Crop Density: Dense planting can create microenvironments with high humidity, enhancing disease spread.',
+      'Previous Crop Residue: Infected plant debris from previous seasons can harbor the fungus, serving as a source of new infections.',
+
+    ],
+    'prevention_and_cure': [
+      'Crop Rotation: Rotate groundnuts with non-host crops, such as cereals or legumes, to break the disease cycle.',
+      'Resistant Varieties: Planting resistant or tolerant groundnut varieties helps reduce disease incidence.',
+      'Planting Density: Avoid overly dense planting to improve air circulation and reduce humidity within the canopy.',
+      'Field Sanitation: Remove and destroy infected plant debris post-harvest to lower the inoculum load for the next season.',
+      'Beneficial Microorganisms: Use antagonistic microorganisms such as Trichoderma spp. and Bacillus spp. to suppress the growth of Phaeoisariopsis personata.',
+      'Fungicides: Apply fungicides as a preventive measure or at the onset of symptoms. Common fungicides include chlorothalonil, tebuconazole, and mancozeb. Follow recommended schedules and dosages to ensure efficacy and prevent resistance.',
+      '',
+
+    ],
+    'cure': [
+      'Begin fungicide applications at the first sign of disease symptoms, adhering to label recommendations for dosage and frequency.',
+      'Combine cultural practices, resistant varieties, and fungicide treatments for effective disease management.',
+      'Regularly monitor fields for early disease symptoms. Early detection allows for timely intervention, reducing disease spread.',
+      'Use irrigation methods that minimize leaf wetness, such as drip or furrow irrigation, instead of overhead irrigation.',
+
+    ],
+    'symptoms': [
+      'Leaf Spots: Dark brown to black spots, often without yellow halos, appearing predominantly on the upper surface of the leaves.',
+      'Defoliation: Severe infections lead to premature leaf drop, significantly affecting plant health and yield.',
+      'Lesion Appearance: Lesions are generally smaller and darker compared to early leaf spot, and they appear later in the season.',
+    ],
   };
 
   Future<void> uploadRecommendation(Map<String, dynamic> data) async {
@@ -78,15 +145,16 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
   }
 
   void getRecommendation() async{
-    recommendation = await queryRecommendationsByRegion(userRegion);
-    saveRecommendationToPreferences(recommendation!);
+    recommendation = (await queryRecommendationsByRegionAndScale(userRegion, detectedDiseaseScale))!;
+    saveRecommendationToPreferences(recommendation);
   }
 
-  Future<Map<String, dynamic>?> queryRecommendationsByRegion(String region) async {
+  Future<Map<String, dynamic>?> queryRecommendationsByRegionAndScale(String region, String scale) async {
     try {
-      QuerySnapshot snapshot = await _firestore
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('disease_recommendations')
           .where('region', isEqualTo: region)
+          .where('scale', arrayContains: scale)
           .get();
 
       if (snapshot.docs.isNotEmpty) {
@@ -99,6 +167,7 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
       return null;
     }
   }
+
 
   Future<void> saveRecommendationToPreferences(Map<String, dynamic> recommendation) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -120,6 +189,20 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
   void dispose() async {
     super.dispose();
     vision.closeYoloModel();
+  }
+
+  Future<bool> checkLeafspotScale(String scale) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('disease_recommendation')
+          .where('scale', arrayContains: scale)
+          .get();
+
+      return querySnapshot.docs.isNotEmpty;
+    } catch (e) {
+      // Handle any errors
+      return false; // Default to false in case of an error
+    }
   }
 
 
@@ -245,7 +328,6 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                     imageFile = null;
                     _confidence = 0.0;
                     _disease = null;
-                    _recommendation =null;
                     yoloResults = [];
                   });
                   imageDialog(context, true);
@@ -279,7 +361,7 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                   ],
                 ),
               )
-                  : imageFile != null &&_disease != null?
+                  : imageFile != null &&_disease != null && recommendation.isNotEmpty?
               Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -306,8 +388,10 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                     tabs: const [
                       Text("Results"),
                       Text("Overview"),
+                      Text("Symptoms"),
                       Text("Causes"),
-                      Text("Prevention & Cure"),
+                      Text("Prevention"),
+                      Text("Cure"),
 
                     ],
                   ),
@@ -343,69 +427,142 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
                                 ),
                               ),
                               Text(
-                                'Disease: $_disease',
+                                'Disease: ${_disease!.substring(0,8)}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    fontFamily: 'Time New Roman'),
+                              ),
+                              Text(
+                                '${_disease!.substring(9,15)}: ${_disease!.substring(15,16)}',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 20,
                                     fontFamily: 'Time New Roman'),
                               ),
 
-                              const SizedBox(height: 10.0),
-                              Text('$_recommendation',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                    fontFamily: 'Time New Roman'
-                                ),
-                              ),
-
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    child: Image.file(
-                                      imageFile!,
-                                      width: 30,
-                                      height: 30,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  Text(_disease!,
-                                    style: const TextStyle(
-                                        fontSize: 20,
-                                        fontFamily: 'Time New Roman'),
-                                  ),
-                                ],
-                              ),
-                             const Text(
-                                "Groundnut leaf spot is a common fungal disease affecting groundnut (peanut) plants, caused by various pathogens such as Cercospora arachidicola and Cercosporidium personatum. It typically manifests as small, dark spots on the leaves, which can merge and cause extensive damage if not managed properly",
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontFamily: 'Time New Roman'),
-                              ),
-                              const SizedBox(height: 20.0),
                             ],
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: Text(recommendation!['description']),
+                          child: ListView(
+                            children: [
+                              Text(
+                                  recommendation['description'],
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.normal,
+                                      fontSize: 20,
+                                      fontFamily: 'Time New Roman')
+                              ),
+                            ],
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: ListView(
-                            children: (recommendation!['causes'] as List<dynamic>)
-                                .map((cause) => ListTile(title: Text(cause)))
+                            children: (recommendation['symptoms'] as List<dynamic>)
+                                .map((cause) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.label),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      cause,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: 20,
+                                          fontFamily: 'Times New Roman'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ))
                                 .toList(),
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: ListView(
-                            children: (recommendation!['prevention_and_cure'] as List<dynamic>)
-                                .map((item) => ListTile(title: Text(item)))
+                            children: (recommendation['causes'] as List<dynamic>)
+                                .map((cause) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.label),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      cause,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: 20,
+                                          fontFamily: 'Times New Roman'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ))
                                 .toList(),
                           ),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: ListView(
+                            children: (recommendation['prevention_and_cure'] as List<dynamic>)
+                                .map((cause) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.label),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      cause,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: 20,
+                                          fontFamily: 'Times New Roman'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ))
+                                .toList(),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: ListView(
+                            children: (recommendation['cure'] as List<dynamic>)
+                                .map((cause) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.label),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      cause,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: 20,
+                                          fontFamily: 'Times New Roman'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ))
+                                .toList(),
+                          ),
+                        ),
+
                       ],
                     ),
                   ),
@@ -608,14 +765,28 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
   }
 
   void _processResults(List<dynamic> results) {
-    // Assume results are in the format [disease, confidence]
+    //Results are in the format [disease, confidence]
     _disease = results[0]['tag'];
     _confidence = results[0]['box'][4];
+    detectedDiseaseScale = _disease!.trim();
     final connectivityResult = (Connectivity().checkConnectivity());
     if (connectivityResult != ConnectivityResult.none) {
       getRecommendation();
+      if(_disease.toString().trim() == 'Leafspot Scale 1'||_disease.toString().trim() == 'Leafspot Scale 2'||_disease.toString().trim() == 'Leafspot Scale 3'){
+        recommendation = recommendationData;
+      }
+      else{
+        recommendation = recommendationDataLate;
+      }
+
     }
     else{
+      if(_disease.toString().trim() == 'Leafspot Scale 1'||_disease.toString().trim() == 'Leafspot Scale 2'||_disease.toString().trim() == 'Leafspot Scale 3'){
+        recommendation = recommendationData;
+      }
+      else{
+        recommendation = recommendationDataLate;
+      }
       loadRecommendationFromPreferences(userRegion, _disease!);
 
     }
@@ -624,10 +795,6 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
 
   }
 
-  String? _getRecommendationForDisease(String? disease) {
-    // Implement your logic to provide recommendations for different diseases
-    return "Recommendations for $_disease";
-  }
 
   getImageDialog(ImageSource source) async {
     final ImagePicker picker = ImagePicker();
@@ -644,34 +811,6 @@ class _LeafSpotDetectionScreenState extends State<LeafSpotDetectionScreen> with 
     }
   }
 
-  void _showRecommendations(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Recommendations on $_disease:',
-                style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10.0),
-              const Text(
-                '1. Practice good field sanitation.\n'
-                    '2. Use disease-resistant crop varieties.\n'
-                    '3. Implement integrated pest management strategies.\n'
-                    '4. Consult with agricultural experts for guidance.',
-                style: TextStyle(fontSize: 16.0),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   void imageDialog(BuildContext context, bool image) {
     showDialog(

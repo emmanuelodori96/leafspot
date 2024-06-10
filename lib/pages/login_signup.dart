@@ -49,7 +49,7 @@ class _LoginViewState extends State<LoginView> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Choose Image Source'),
+          title: const Text('Choose Image Source'),
           content: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -65,12 +65,12 @@ class _LoginViewState extends State<LoginView> {
                   }
 
                 },
-                child: Icon(
+                child: const Icon(
                   Icons.camera_alt,
                   size: 30,
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
               InkWell(
@@ -86,7 +86,7 @@ class _LoginViewState extends State<LoginView> {
                   }
 
                 },
-                child:  Icon(
+                child:  const Icon(
                   Icons.photo,
                   size: 30,
                 ),
@@ -126,33 +126,10 @@ class _LoginViewState extends State<LoginView> {
                   height: Get.height * 0.08,
                 ),
                 isSignUp
-                    ? myText(
-                  text: 'Sign Up',
-                  style: TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.w600,
-                  ),
-                )
-                    : myText(
-                  text: 'Login',
-                  // style: GoogleFonts.poppins(
-                  //   fontSize: 23,
-                  //   fontWeight: FontWeight.w600,
-                  // ),
-                ),
-                SizedBox(
-                  height: Get.height * 0.03,
-                ),
-                isSignUp
                     ? Container(
                   child: myText(
                     text:
-                    'Welcome, Please Sign up to see events and classes from your friends.',
-                    // style: GoogleFonts.roboto(
-                    //   letterSpacing: 0,
-                    //   fontSize: 18,
-                    //   fontWeight: FontWeight.w400,
-                    // ),
+                    'Welcome, Please Sign up',
                     textAlign: TextAlign.center,
                   ),
                 )
@@ -160,11 +137,7 @@ class _LoginViewState extends State<LoginView> {
                   child: myText(
                     text:
                     'Welcome back, Please Sign in and continue your journey with us.',
-                    // style: GoogleFonts.roboto(
-                    //   letterSpacing: 0,
-                    //   fontSize: 18,
-                    //   fontWeight: FontWeight.w400,
-                    // ),
+
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -211,7 +184,7 @@ class _LoginViewState extends State<LoginView> {
                   child: Form(
                     key: formKey,
                     child: TabBarView(
-                      physics: NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       children: [
                         LoginWidget(),
                         SignUpWidget(),
@@ -287,7 +260,7 @@ class _LoginViewState extends State<LoginView> {
                               controller: forgetEmailController
                           ),
 
-                          SizedBox(
+                          const SizedBox(
                             height: 10,
                           ),
 
@@ -295,7 +268,8 @@ class _LoginViewState extends State<LoginView> {
                             color: Colors.blue,
                             onPressed: (){
                               authController.forgetPassword(forgetEmailController.text.trim());
-                            },child: Text("Sent"),minWidth: double.infinity,)
+                            },
+                            child: const Text("Sent"),minWidth: double.infinity,)
 
                         ],
                       ),
@@ -317,7 +291,7 @@ class _LoginViewState extends State<LoginView> {
               ),
             ],
           ),
-          Obx(()=> authController.isLoading.value? Center(child: CircularProgressIndicator(),) :Container(
+          Obx(()=> authController.isLoading.value? const Center(child: CircularProgressIndicator(),) :Container(
             height: 50,
             margin: EdgeInsets.symmetric(
                 vertical: Get.height * 0.04),
@@ -346,9 +320,6 @@ class _LoginViewState extends State<LoginView> {
     return SingleChildScrollView(
         child: Column(
           children: [
-            SizedBox(
-              height: Get.width * 0.1,
-            ),
             InkWell(
               onTap: () {
                 imagePickDialog();
@@ -356,12 +327,12 @@ class _LoginViewState extends State<LoginView> {
               child: Container(
                 width: 120,
                 height: 120,
-                margin: EdgeInsets.only(top: 35),
-                padding: EdgeInsets.all(2),
+                margin: const EdgeInsets.only(top: 35),
+                padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   color: AppColors.blue,
                   borderRadius: BorderRadius.circular(70),
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [
                       Color(0xff7DDCFB),
                       Color(0xffBC67F2),
@@ -373,13 +344,13 @@ class _LoginViewState extends State<LoginView> {
                 child: Column(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(2),
+                      padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(70),
                       ),
                       child: profileImage == null
-                          ? CircleAvatar(
+                          ? const CircleAvatar(
                         radius: 56,
                         backgroundColor: Colors.white,
                         child: Icon(
@@ -498,7 +469,7 @@ class _LoginViewState extends State<LoginView> {
             SizedBox(
               height: Get.height * 0.02,
             ),
-            Text("Select Gender"),
+            const Text("Select Gender"),
 
             RadioListTile(
                 title: Text(
@@ -574,7 +545,7 @@ class _LoginViewState extends State<LoginView> {
                 },
                 controller: cropTypeController
             ),
-            Obx(()=> authController.isLoading.value|| authController.isProfileInformationLoading.value? Center(child: CircularProgressIndicator(),) : Container(
+            Obx(()=> authController.isLoading.value|| authController.isProfileInformationLoading.value? const Center(child: CircularProgressIndicator(),) : Container(
               height: 50,
               margin: EdgeInsets.symmetric(
                 vertical: Get.height * 0.04,
@@ -623,244 +594,66 @@ class _LoginViewState extends State<LoginView> {
             SizedBox(
               height: Get.height * 0.02,
             ),
-            Container(
-                width: Get.width * 0.8,
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(children: [
-                    TextSpan(
-                        text:
-                        'By signing up, you agree our ',
-                        style: TextStyle(
-                            color: Color(0xff262628),
-                            fontSize: 12)),
-                    TextSpan(
-                        text:
-                        'terms, Data policy and cookies policy',
-                        style: TextStyle(
-                            color: Color(0xff262628),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
-                  ]),
-                )),
+            InkWell(
+              onTap: () {
+                Get.defaultDialog(
+                    title: 'Terms and Data policies',
+                    content: Container(
+                      width: Get.width,
+                      child: Column(
+                        children: [
+                          Text('Term 1'),
+                          Text('Term 2'),
+                          Text('Term 3'),
+                          Text('Term 4'),
+                          Text('Term 5'),
+                          Text('Term 6'),
+                          Text('Term 7'),
+
+
+                          const SizedBox(
+                            height: 10,
+                          ),
+
+                          MaterialButton(
+                            color: Colors.blue,
+                            onPressed: (){
+                             Navigator.pop(context);
+                            },
+                            child: const Text("Ok"),minWidth: double.infinity,)
+
+                        ],
+                      ),
+                    )
+                );
+              },
+              child: SizedBox(
+                  width: Get.width * 0.8,
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: const TextSpan(children: [
+                      TextSpan(
+                          text:
+                          'By signing up, you agree our ',
+                          style: TextStyle(
+                              color: Color(0xff262628),
+                              fontSize: 12)),
+                      TextSpan(
+                          text:
+                          'terms and, Data policy',
+                          style: TextStyle(
+                              color: Color(0xff262628),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold)),
+                    ]),
+                  )),
+            ),
           ],
         )
 
     );
   }
-/*
-  Widget SignUpWidget(){
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 35),
-          InkWell(
-            onTap: () {
-              imagePickDialog();
-            },
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(70),
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xff7DDCFB),
-                    Color(0xffBC67F2),
-                    Color(0xffACF6AF),
-                    Color(0xffF95549),
-                  ],
-                ),
-              ),
-              child: Icon(Icons.camera_alt, color: Colors.blue, size: 50),
-            ),
-          ),
-          myTextField(
-              bool: false,
-              icon: Icons.mail,
-              text: 'Email',
-              validator: (String input){
-                if(input.isEmpty){
-                  Get.snackbar('Warning', 'Email is required.',colorText: Colors.white,backgroundColor: Colors.blue);
-                  return '';
-                }
 
-                if(!input.contains('@')){
-                  Get.snackbar('Warning', 'Email is invalid.',colorText: Colors.white,backgroundColor: Colors.blue);
-                  return '';
-                }
-              },
-              controller: emailController
-          ),
-          SizedBox(
-            height: Get.height * 0.02,
-          ),
-          myTextField(
-              bool: true,
-              icon: Icons.lock,
-              text: 'password',
-              validator: (String input){
-                if(input.isEmpty){
-                  Get.snackbar('Warning', 'Password is required.',colorText: Colors.white,backgroundColor: Colors.blue);
-                  return '';
-                }
-
-                if(input.length <6){
-                  Get.snackbar('Warning', 'Password should be 6+ characters.',colorText: Colors.white,backgroundColor: Colors.blue);
-                  return '';
-                }
-              },
-              controller: passwordController
-          ),
-          SizedBox(
-            height: Get.height * 0.02,
-          ),
-          myTextField(
-              bool: false,
-              icon: Icons.lock,
-              text: 'Re-enter password',
-              validator: (input){
-                if(input != passwordController.text.trim()){
-                  Get.snackbar('Warning', 'Confirm Password is not same as password.',colorText: Colors.white,backgroundColor: Colors.blue);
-                  return '';
-                }
-              },
-              controller: confirmPasswordController
-          ),
-          const Divider(thickness: 5, color: Colors.green,),
-          SizedBox(
-            height: Get.height * 0.02,
-          ),
-          myTextField(
-              bool: false,
-              icon: Icons.person,
-              text: 'Enter full name',
-              validator: (String input){
-                if(input.isEmpty){
-                  Get.snackbar('Warning','Your name is required please',colorText: Colors.white,backgroundColor: Colors.blue);
-                  return '';
-                }
-              },
-              controller: nameController
-          ),
-          SizedBox(
-            height: Get.height * 0.02,
-          ),
-          myTextField(
-              bool: false,
-              icon: Icons.phone,
-              text: 'Phone Number',
-              validator: (String input){
-                if(input.isEmpty){
-                  Get.snackbar('Warning', 'Phone number is required please.',colorText: Colors.white,backgroundColor: Colors.blue);
-                  return '';
-                }
-                if(input.length != 10 || input.length != 13 || !input.isPhoneNumber){
-                  Get.snackbar('Warning', 'Phone number is not valid.',colorText: Colors.white,backgroundColor: Colors.blue);
-                  return '';
-                }
-              },
-              controller: contactController
-          ),
-          SizedBox(
-            height: Get.height * 0.02,
-          ),
-          Row(
-            children: [
-              Container(
-                // alignment: Alignment.topLeft,
-                // width: 150,
-                child: RadioListTile(
-                  title: Text(
-                    'Male',
-                    style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.genderTextColor,
-                    ),
-                  ),
-                  value: 0,
-                  groupValue: selectedRadio,
-                  onChanged: (int? val) {
-                    setSelectedRadio(val!);
-                  },
-                ),
-              ),
-              Container(
-                child: RadioListTile(
-                  title: Text(
-                    'Female',
-                    style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.genderTextColor,
-                    ),
-                  ),
-                  value: 1,
-                  groupValue: selectedRadio,
-                  onChanged: (int? val) {
-                    setSelectedRadio(val!);
-                  },
-                ),
-              ),
-
-            ],
-          ),
-          SizedBox(
-            height: Get.height * 0.02,
-          ),
-          myTextField(
-              bool: false,
-              icon: Icons.lock,
-              text: 'Your farm location',
-              validator: (String input){
-                if(input.isEmpty){
-                  Get.snackbar('Warning', 'Location is required for localize recommendations.',colorText: Colors.white,backgroundColor: Colors.blue);
-                  return '';
-                }
-              },
-              controller: locationController
-          ),
-          SizedBox(
-            height: Get.height * 0.02,
-          ),
-          myTextField(
-              bool: false,
-              icon: Icons.scale,
-              text: 'Farm scale',
-              validator: (String input){
-
-              },
-              controller: farmSizeController
-          ),
-          SizedBox(
-            height: Get.height * 0.02,
-          ),
-          myTextField(
-              bool: false,
-              icon: Icons.type_specimen,
-              text: 'Crop type',
-              validator: (String input){
-                if(input.toLowerCase() != 'ground nut' || input.toLowerCase() != 'gnut'){
-                  Get.snackbar('Information', 'We are not having other services for that crop at the moment.',colorText: Colors.white,backgroundColor: Colors.blue);
-                }
-
-              },
-              controller: cropTypeController
-          ),
-
-          ElevatedButton(
-            onPressed: () {
-              // Handle sign-up button press
-            },
-            child: Text('Sign Up'),
-          ),
-        ],
-      ),
-    );
-  }
-*/
   Future<LocationResult?> captureLocation() async {
     try {
       LocationPermission permission = await Geolocator.requestPermission();

@@ -21,7 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Farmer Profile'),
+        title: const Text('Farmer Profile'),
         actions: [
           controller.isCurrentUser
               ? IconButton(
@@ -46,21 +46,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     }
                   })
-              : SizedBox(),
+              : const SizedBox(),
         ],
       ),
       body: Obx(() {
         if (controller.farmerDoc.value == null) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (!controller.farmerDoc.value!.exists) {
-          return Center(child: Text('Farmer not found'));
+          return const Center(child: Text('Farmer not found'));
         }
 
         var data = controller.farmerDoc.value!.data()!;
         return Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
             child: Column(
               children: [
@@ -68,7 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   radius: 50,
                   backgroundImage: CachedNetworkImageProvider(data['image']),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _buildProfileField('Name', data['name'], controller.isEditing,
                     (value) {
                   data['name'] = value;
@@ -114,13 +114,13 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
             isEditing.value && !readOnly
                 ? Expanded(
                     child: TextFormField(
                       initialValue: value,
                       onChanged: onChanged,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         isDense: true,
                         contentPadding:
                             EdgeInsets.symmetric(vertical: 8, horizontal: 16),

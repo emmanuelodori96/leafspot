@@ -14,7 +14,6 @@ import 'package:get/get.dart';
 import '../controller/data_controller.dart';
 import '../search/search_page.dart';
 import 'ai_screen.dart';
-import 'discussion_room.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -29,12 +28,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late DataController dataController;
   String? imageUrl;
+  bool isExpert =false;
+  bool isLoading = true;
   ImageProvider<Object>? imageProvider;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final Connectivity _connectivity = Connectivity();
   late User? _currentUser;
   LocationPermission _permission = LocationPermission.denied;
+  String myUid = FirebaseAuth.instance.currentUser!.uid;
 
 
   int currentIndex = 0;
@@ -56,6 +57,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     dataController = Get.put(DataController());
     _requestLocationPermission();
+    fetchUserType();
     getImage();
     _currentUser = _auth.currentUser;
     _setOnlineStatus();
@@ -79,6 +81,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _permission = permission;
     });
+    locationImpact();
   }
 
   void getImage() async {
@@ -89,6 +92,11 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
+  void locationImpact(){
+    if(_permission == LocationPermission.denied) {
+      Get.snackbar('Information', 'You may not have localized recommendation unless the app has access to your location.',colorText: Colors.white,backgroundColor: Colors.blue);
+    }
+  }
 
   @override
   void dispose() {
@@ -96,28 +104,63 @@ class _HomePageState extends State<HomePage> {
 
     super.dispose();
   }
+  Future<void> fetchUserType() async {
+    try {
+      myUid = FirebaseAuth.instance.currentUser!.uid;
+
+      // Fetch from farmers collection
+      DocumentSnapshot farmerSnapshot = await FirebaseFirestore.instance.collection('farmers').doc(myUid).get();
+
+      // Check if the document exists in the farmers collection
+      if (farmerSnapshot.exists) {
+        setState(() {
+          isExpert = farmerSnapshot['isExpert'];
+          isLoading = false;
+        });
+      } else {
+        // Fetch from experts collection if not found in farmers
+        DocumentSnapshot expertSnapshot = await FirebaseFirestore.instance.collection('experts').doc(myUid).get();
+        if (expertSnapshot.exists) {
+          setState(() {
+            isExpert = expertSnapshot['isExpert'];
+            isLoading = false;
+          });
+        } else {
+          // Handle the case where the user is not found in either collection
+          setState(() {
+            isExpert = false; // Default to false if user is not found
+            isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      // Handle any errors
+      setState(() {
+        isExpert = false; // Default to false in case of an error
+        isLoading = false;
+      });
+    }
+  }
 
   Future<void> _setOnlineStatus() async {
     final connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult != ConnectivityResult.none) {
-      await _firestore.collection('experts').doc(_currentUser?.uid).update({'isOnline': true});
+      if(isExpert) {
+        await _firestore.collection('experts').doc(_currentUser?.uid).update({'isOnline': true});
+      } else {
+        await _firestore.collection('farmers').doc(_currentUser?.uid).update({'isOnline': true});
+      }
     }
   }
 
   Future<void> _setOfflineStatus() async {
-    await _firestore.collection('experts').doc(_currentUser?.uid).update({'isOnline': false});
-  }
-
-  Future<void> _updateUserStatus() async {
-    if (_currentUser != null) {
-      final connectivityResult = await _connectivity.checkConnectivity();
-      if (connectivityResult != ConnectivityResult.none) {
-        await _firestore.collection('experts').doc(_currentUser!.uid).update({'isOnline': true});
-      } else {
-        await _firestore.collection('experts').doc(_currentUser!.uid).update({'isOnline': false});
-      }
+    if(isExpert) {
+      await _firestore.collection('experts').doc(_currentUser?.uid).update({'isOnline': false});
+    } else {
+      await _firestore.collection('farmers').doc(_currentUser?.uid).update({'isOnline': false});
     }
   }
+
 
 
 
@@ -145,27 +188,27 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: CurvedNavigationBar(
         buttonBackgroundColor: Theme.of(context).dividerColor,
         backgroundColor: DataController().isDarkMode.value? Colors.transparent: Colors.white,
-        color: DataController().isDarkMode.value? Color(0xFF495A4C):Color(0xFFB5DEB7),
+        color: DataController().isDarkMode.value? const Color(0xFF495A4C):const Color(0xFFB5DEB7),
         items: [
           CurvedNavigationBarItem(
             labelStyle: TextStyle(
               color: DataController().isDarkMode.value? Colors.white: Colors.black
             ),
-            child: Icon(Icons.home_outlined),
+            child: const Icon(Icons.home_outlined),
             label: 'Home',
           ),
           CurvedNavigationBarItem(
             labelStyle: TextStyle(
                 color: DataController().isDarkMode.value? Colors.white: Colors.black
             ),
-            child: Icon(Icons.search),
+            child: const Icon(Icons.search),
             label: 'Search',
           ),
           CurvedNavigationBarItem(
             labelStyle: TextStyle(
                 color: DataController().isDarkMode.value? Colors.white: Colors.black
             ),
-            child: Icon(Icons.settings),
+            child: const Icon(Icons.settings),
             label: 'Settings',
           ),
         ],

@@ -3,10 +3,8 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:diagno/pages/login_signup.dart';
-
-
 import 'package:path/path.dart' as Path;
 
 import '../pages/home_page.dart';
@@ -25,7 +23,7 @@ class AuthController extends GetxController {
       /// Login Success
 
       isLoading(false);
-      Get.to(() => HomePage(title: 'Diagno vision'));
+      Get.to(() => const HomePage(title: 'Diagno vision'));
     }).catchError((e) {
       isLoading(false);
       Get.snackbar('Error', "$e");
@@ -73,33 +71,6 @@ class AuthController extends GetxController {
     });
   }
 
-  // signInWithGoogle() async {
-  //   isLoading(true);
-  //   // Trigger the authentication flow
-  //   final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-  //
-  //   // Obtain the auth details from the request
-  //   final GoogleSignInAuthentication? googleAuth =
-  //       await googleUser?.authentication;
-  //
-  //   // Create a new credential
-  //   final credential = GoogleAuthProvider.credential(
-  //     accessToken: googleAuth?.accessToken,
-  //     idToken: googleAuth?.idToken,
-  //   );
-  //
-  //   // Once signed in, return the UserCredential
-  //   FirebaseAuth.instance.signInWithCredential(credential).then((value) {
-  //     isLoading(false);
-  //
-  //     ///SuccessFull loged in
-  //     Get.to(() => HomePage(selectedLanguage: 'en'));
-  //   }).catchError((e) {
-  //     /// Error in getting Login
-  //     isLoading(false);
-  //     print("Error is $e");
-  //   });
-  // }
 
 
   var isProfileInformationLoading = false.obs;
@@ -115,7 +86,9 @@ class AuthController extends GetxController {
     await taskSnapshot.ref.getDownloadURL().then((value) {
       imageUrl = value;
     }).catchError((e) {
-      print("Error happen $e");
+      if (kDebugMode) {
+        print("Error happen $e");
+      }
     });
 
     return imageUrl;
@@ -133,6 +106,8 @@ class AuthController extends GetxController {
       'image': imageUrl,
       'name': name,
       'email': email,
+      'isExpert': false,
+      'isOnline': false,
       'phone': mobileNumber,
       'location': location,
       'scale': scale,
@@ -140,7 +115,7 @@ class AuthController extends GetxController {
       'crop_type': cropType
     }).then((value) {
       isProfileInformationLoading(false);
-      Get.offAll(()=> HomePage(title: 'Diagno vision'));
+      Get.offAll(()=> const HomePage(title: 'AgriGuard vision'));
     });
 
   }

@@ -83,7 +83,7 @@ class OnBoardingScreen extends StatelessWidget {
                       padding: const EdgeInsets.only(left: 15, right: 15),
                       child: MaterialButton(
                         minWidth: double.infinity,
-                        color: Colors.white,
+                        color: Colors.greenAccent,
                         elevation: 2,
                         onPressed: () {
                           Get.to(() => LoginView());

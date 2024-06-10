@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:diagno/pages/home_page.dart';
 import 'package:diagno/pages/onboarding_page.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
